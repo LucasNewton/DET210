@@ -16,6 +16,8 @@ public class PlayerObject : MonoBehaviour {
 	private struct inputKeys {
 		public bool left, right, forward, backward, space, escape, lShift;
 	}
+	
+	public Vector3 respawnPosition = Vector3.zero;
 
 	//	SerializeFields
 	[SerializeField]					private directions gravityDirection;
@@ -25,8 +27,9 @@ public class PlayerObject : MonoBehaviour {
 	[SerializeField] [Range (0, 5)]		private float playerRotateSpeed;
 	[SerializeField] [Range (1, 100)]	private float jumpHeight;
 	[SerializeField] [Range (1, 6)]		private float horizontalJumpingBoost;
-	[SerializeField] [Range (150, 500)]	private float dashSpeed;
+	[SerializeField] [Range (50, 300)]	private float dashSpeed;
 	[SerializeField] [Range (1, 20)]	private int dashingCoolDown;
+	[SerializeField] [Range (1, 20)]	private int dashingDuration;
 	[SerializeField] [Range (1, 20)]	private float gravityStrengthGUI;
 	[SerializeField] [Range (3, 15)]	private int deathFallDistance;
 
@@ -42,8 +45,10 @@ public class PlayerObject : MonoBehaviour {
 	private axis axisToRotateOn;
 	private float gravityStrength;
 	private bool usingLaunchPad;
+	private bool respawning;
 	private int launchStrength;
 	private bool isDashing;
+	private int dashingDurationSave;
 	private int fallDistance;
 	private bool countingFallDistance;
 	private int dashingCoolDownSave;
@@ -68,12 +73,14 @@ public class PlayerObject : MonoBehaviour {
 		//	player stuff
 		playerVelocity = Vector3.zero;
 		worldRotating = false;
+		respawning = false;
 		usingLaunchPad = false;
 		gravityFrom = gravityDirection;
 		gravityStrength = gravityStrengthGUI / 19.62f;
 		gravityStrengthSave = gravityStrength;
 		//	Save what the game dev wants but set to zero so we can dash when world is loaded
 		dashingCoolDownSave = dashingCoolDown;
+		dashingDurationSave = dashingDuration;
 		dashingCoolDown = 0;
 		degreesRotated = 0;
 		degreesToRotate = 0;
@@ -84,7 +91,9 @@ public class PlayerObject : MonoBehaviour {
 		mouseRotY = mouseRot.y;
         mouseRotX = mouseRot.x;
 
-		//InvokeRepeating ("printGravityDirection", 0, 2);
+		if (respawnPosition == Vector3.zero) {
+			respawnPosition = new Vector3 (0, 9.08f, -8);
+		}
 	}
 
 	private void printGravityDirection () {
@@ -93,33 +102,48 @@ public class PlayerObject : MonoBehaviour {
 
 	//	Called indepently from fps
 	public void FixedUpdate () {
-		movePlayer ();
+		//if (!respawning) {
+			movePlayer ();
+		//}
 	}
 	
 	//	Update is called once per frame
 	public void Update () {
-		if (worldRotating) {
-			gravityChangeRotateWorld ();
-		}
-		rotatePlayerToFaceMouseDirection ();
-		getKeyboardInput ();
-		invokeKeyboardInput ();
+		if (!respawning) {
+			if (worldRotating) {
+				gravityChangeRotateWorld ();
+			}
+			rotatePlayerToFaceMouseDirection ();
+			getKeyboardInput ();
+			invokeKeyboardInput ();
 
-		if (playerVelocity.y < -5 && !controller.isGrounded && !countingFallDistance && !isDashing && !worldRotating) {
-			countingFallDistance = true;
-			fallDistance = 0;
-			incrementFallDistance ();
+			if (playerVelocity.y < -5 && !controller.isGrounded && !countingFallDistance && !isDashing && !worldRotating) {
+				countingFallDistance = true;
+				fallDistance = 0;
+				incrementFallDistance ();
+			}
+			else {
+				if (playerVelocity.y >= -5 && controller.isGrounded) {
+					countingFallDistance = false;
+					fallDistance = 0;
+				}
+			}
 		}
 		else {
-			if (playerVelocity.y >= -5 && controller.isGrounded) {
-				countingFallDistance = false;
-				fallDistance = 0;
+			if (worldRotating) {
+				gravityChangeRotateWorld ();
+			}
+			else {
+				transform.position = respawnPosition;
+				respawning = false;
 			}
 		}
 	}
 
 	public void LateUpdate () {
-		moveCameraWithMouse ();
+		if (!respawning) {
+			moveCameraWithMouse ();
+		}
 	}
 	
 	public void changeGravity (directions dir) {
@@ -142,7 +166,7 @@ public class PlayerObject : MonoBehaviour {
 	}
 	
 	public void respawnPlayer () {
-		Scene scene = SceneManager.GetActiveScene();
+		/*Scene scene = SceneManager.GetActiveScene();
 		SceneManager.LoadScene(scene.name);
 
 		GameObject [] gameObjects = GameObject.FindGameObjectsWithTag ("Floor");
@@ -161,7 +185,10 @@ public class PlayerObject : MonoBehaviour {
 				Random.Range (0f, 1f), 
 				Random.Range (0f, 1f)
 			));
-		}
+		}*/
+
+		respawning = true;
+		changeGravity (directions.down);
 	}
 	
 	private void getKeyboardInput () {
@@ -286,7 +313,6 @@ public class PlayerObject : MonoBehaviour {
 	}
 
 	private void decrementDashCoolDown () {
-		print ("dash: " + dashingCoolDown);
 		if (dashingCoolDown > 0) {
 			dashingCoolDown --;
 			if (dashingCoolDown != 0) {
@@ -313,7 +339,14 @@ public class PlayerObject : MonoBehaviour {
 		if (isDashing) {
 			//	Guarentee forward movement
 			playerVelocity.z += dashSpeed;
-			isDashing = false;
+			if (dashingDuration == 0) {
+				isDashing = false;
+				dashingDuration = dashingDurationSave;
+			}
+			else {
+				//	This works because this function is called from fixedUpdate
+				dashingDuration --;
+			}
 		}
 
 		if ((!controller.isGrounded || playerVelocity.y > gravityStrength || controller.velocity.y > gravityStrength) && !usingLaunchPad) {

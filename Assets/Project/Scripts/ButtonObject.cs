@@ -17,9 +17,11 @@ public class ButtonObject : MonoBehaviour {
     // A percent of the height that doesn't get pressed down, default is 0.1 (which would be 10%)
     [SerializeField] [Range (0f, 1f)]       private float percentNotPressable;
     [SerializeField] [Range (0.01f, 1f)]    private float pressSpeed;
+    [SerializeField]                        private bool finalWinButton;
 
     private PlayerObject player;
     private Vector3 size;
+    private Vector3 telePlayerLocation;
     private float traveledDistance;
     private bool beingPressed;
     private bool buttonActionBegin;
@@ -49,6 +51,8 @@ public class ButtonObject : MonoBehaviour {
         pressedLastFrame = false;
         buttonActionBegin = false;
         buttonActionContinue = false;
+
+        telePlayerLocation = Vector3.zero;
 
         //  assume that buttons that aren't orientated down from world creation is created with rotation
         totalTravelDistanceAllowed = size.y - (size.y * percentNotPressable);
@@ -104,8 +108,13 @@ public class ButtonObject : MonoBehaviour {
 
             if (type == buttonType.Winning)
             {
-                //  Load Next scene script (bugged?)
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+                //  Do this if there is a different scene that needs to be loaded
+                // SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+
+                if (!finalWinButton) {
+                    player.respawnPosition = new Vector3 (-213, -2, -585);
+                    player.respawnPlayer ();
+                }
             }
             else if (type == buttonType.Gravity)
             {
