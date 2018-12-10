@@ -1,0 +1,15 @@
+Player:
+	- abilities
+		- Dash: A quick thrust is applied to the players relative x-axis
+	- movement
+		- Walk, Run, Jump
+
+World:
+	- Objects
+		- Buttons
+			- Change gravity buttons
+			- Do action (variable) button
+			- Go to the next level
+		- Walls/Floors
+		- launchpad
+			- Stepping on it causes player to get launched in the air
