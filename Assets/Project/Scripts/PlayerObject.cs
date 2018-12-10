@@ -23,7 +23,7 @@ public class PlayerObject : MonoBehaviour {
 	[SerializeField]					private directions gravityDirection;
 	[SerializeField] [Range (1, 500)]   private int mouseSensitivity;
 	[SerializeField] 					private bool lockedCursor;
-	[SerializeField] [Range (1, 10)]	private float walkSpeed;
+	[SerializeField] [Range (5, 20)]	private float walkSpeed;
 	[SerializeField] [Range (0, 5)]		private float playerRotateSpeed;
 	[SerializeField] [Range (1, 100)]	private float jumpHeight;
 	[SerializeField] [Range (1, 6)]		private float horizontalJumpingBoost;

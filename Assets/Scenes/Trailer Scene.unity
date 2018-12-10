@@ -18779,10 +18779,10 @@ MonoBehaviour:
   lockedCursor: 1
   walkSpeed: 10
   playerRotateSpeed: 1.7
-  jumpHeight: 15.7
-  horizontalJumpingBoost: 3.15
+  jumpHeight: 15
+  horizontalJumpingBoost: 4
   dashSpeed: 75
-  dashingCoolDown: 1
+  dashingCoolDown: 10
   dashingDuration: 10
   gravityStrengthGUI: 9.81
   deathFallDistance: 6
